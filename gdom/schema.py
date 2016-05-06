@@ -1,11 +1,13 @@
 import graphene
 from pyquery import PyQuery as pq
 import re
+import requests
+from requests.packages import chardet
 
-GDOM_DEFAULT_HEADERS = {
-    'Cookie': 'JSESSIONID=1C6FB72E83982B8309F7B411BC5F4186.tomcat2',
-    'Referer': 'http://58.118.0.15/admin/toIndex.dhtml',
+GDOM_HEADERS = {
+    'Referer': 'http://www.baidu.com',
     'Upgrade-Insecure-Requests': '1',
+    'Accept-Language': 'zh-CN,zh;q=0.8,en;q=0.6,ja;q=0.4',
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit/537.36 (KHTML, like Gecko)'
                   ' Chrome/52.0.2716.0 Safari/537.36'
 }
@@ -59,19 +61,21 @@ class Node(graphene.Interface):
             return self._root
 
         p = None
-        for q in selector.split():
-            # selector like "td:eq(2) a:eq(3)"
-            s = re.search(r'^(.+):eq\((\d+)\)$', q)
-            if s:
-                p = p and p.find(s.group(1)).eq(int(s.group(2)))\
-                    or self._root.find(s.group(1)).eq(int(s.group(2)))
-            elif p:
-                p = p.find(q).eq(0)
+        pattern = r'([\w.-]+):eq\((\d+)\)'
+        if re.search(pattern, selector):
+            for q in selector.split():
+                # selector like "td:eq(2) a:eq(3)"
+                s = re.search(pattern, q)
+                p = p or self._root
+                if s:
+                    p = p.find(s.group(1)).eq(int(s.group(2)))
+                else:
+                    p = p.find(q).eq(0)
 
         if not p:
             p = self._root.find(selector)
 
-        print selector, p
+        # print selector, p
         return p
 
     def resolve_content(self, args, info):
@@ -137,8 +141,12 @@ class Node(graphene.Interface):
 
 
 def get_page(page, headers=None):
-    headers = headers or GDOM_DEFAULT_HEADERS
-    return pq(page, headers=headers)
+    headers = headers or GDOM_HEADERS
+    r = requests.get(page, headers=headers)
+    # r.encoding = chardet.detect(r.content).get('encoding')
+    query = pq(r.content)
+    print query.encoding
+    return query
 
 
 class Document(Node):
