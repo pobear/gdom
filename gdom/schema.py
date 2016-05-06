@@ -140,13 +140,19 @@ class Node(graphene.Interface):
         return self._root.prevAll(selector).items()
 
 
-def get_page(page, headers=None):
-    headers = headers or GDOM_HEADERS
-    r = requests.get(page, headers=headers)
-    # r.encoding = chardet.detect(r.content).get('encoding')
-    query = pq(r.content)
-    print query.encoding
-    return query
+def get_page(page, headers=None, client_type=None):
+    page = page.strip()
+    if re.search('^https?://', page):
+        headers = headers and GDOM_HEADERS.update(headers) or GDOM_HEADERS
+        if client_type == 'requests':
+            r = requests.get(page, headers=headers)
+            print r.encoding
+            # r.encoding = chardet.detect(r.content).get('encoding')
+            return pq(r.content)
+        else:
+            return pq(page, headers=headers)
+    else:
+        return pq(page)
 
 
 class Document(Node):
@@ -180,13 +186,21 @@ class Query(graphene.ObjectType):
     page = graphene.Field(Document,
                           description='Visit the specified page',
                           url=graphene.String(description='The url of the page'),
-                          source=graphene.String(description='The source of the page'))
+                          source=graphene.String(description='The source of the page'),
+                          headers=graphene.String(description='The headers of the page'),
+                          client=graphene.String(description='HTTP client: requests or pyquery'))
 
     def resolve_page(self, args, info):
         url = args.get('url')
         source = args.get('source')
+        header = args.get('headers')
+        client_type = args.get('client')
+        headers = header and dict([map(lambda x: x.strip(), h.split(':'))
+                                   for h in header.split('|')]) or {}
+
+        print headers
         assert url or source, 'At least you have to provide url or source of the page'
-        return get_page(url or source)
+        return get_page(url or source, headers=headers, client_type=client_type)
 
 
 schema = graphene.Schema(query=Query)

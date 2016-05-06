@@ -57,7 +57,8 @@ def main():
 
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('query', type=argparse.FileType('r'), nargs='?', help='The query file', default=None)
-    group.add_argument('--test', action='store_true', default=False, help='This will start a test server with a UI for querying')
+    group.add_argument('--test', action='store_true', default=False,
+                       help='This will start a test server with a UI for querying')
 
     parser.add_argument('page', metavar='PAGE', nargs='?', const=1, type=str, help='The pages to parse')
 
@@ -83,6 +84,7 @@ def main():
         outdata = json.dumps(data, indent=4, separators=(',', ': '))
         args.output.write(outdata)
         args.output.write('\n')
+
 
 if __name__ == '__main__':
     main()
