@@ -1,3 +1,4 @@
+import urlparse
 import graphene
 from pyquery import PyQuery as pq
 import re
@@ -11,6 +12,42 @@ GDOM_HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit/537.36 (KHTML, like Gecko)'
                   ' Chrome/52.0.2716.0 Safari/537.36'
 }
+
+
+class QueryClient(object):
+    headers = {
+        'Referer': 'http://www.baidu.com',
+        'Upgrade-Insecure-Requests': '1',
+        'Accept-Language': 'zh-CN,zh;q=0.8,en;q=0.6,ja;q=0.4',
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit/537.36 (KHTML, like Gecko)'
+                      ' Chrome/52.0.2716.0 Safari/537.36'
+    }
+    host = None
+    client_type = 'requests'
+
+    def get_query(self, page, headers=None, client_type=None, is_host=False):
+        if headers:
+            self.headers.update(headers)
+        if client_type:
+            self.client_type = client_type
+
+        page = page.strip()
+        if re.search('^https?://', page):
+            print page
+            p = urlparse.urlparse(page)
+
+            if is_host:
+                self.host = '%s://%s' % (p.scheme, p.netloc)
+
+            if self.client_type == 'requests':
+                r = requests.get(page, headers=self.headers)
+                print r.encoding
+                # r.encoding = chardet.detect(r.content).get('encoding')
+                return pq(r.content)
+            else:
+                return pq(page, headers=self.headers)
+        else:
+            return pq(page)
 
 
 class Node(graphene.Interface):
@@ -140,19 +177,20 @@ class Node(graphene.Interface):
         return self._root.prevAll(selector).items()
 
 
-def get_page(page, headers=None, client_type=None):
-    page = page.strip()
-    if re.search('^https?://', page):
-        headers = headers and GDOM_HEADERS.update(headers) or GDOM_HEADERS
-        if client_type == 'requests':
-            r = requests.get(page, headers=headers)
-            print r.encoding
-            # r.encoding = chardet.detect(r.content).get('encoding')
-            return pq(r.content)
-        else:
-            return pq(page, headers=headers)
-    else:
-        return pq(page)
+# def get_page(page, headers=None, client_type=None):
+#     page = page.strip()
+#     print page
+#     if re.search('^https?://', page):
+#         headers = headers and GDOM_HEADERS.update(headers) or GDOM_HEADERS
+#         if client_type == 'requests':
+#             r = requests.get(page, headers=headers)
+#             print r.encoding
+#             # r.encoding = chardet.detect(r.content).get('encoding')
+#             return pq(r.content)
+#         else:
+#             return pq(page, headers=headers)
+#     else:
+#         return pq(page)
 
 
 class Document(Node):
@@ -178,8 +216,11 @@ class Element(Node):
         # If is a link we follow through href attr
         # return the resulting Document
         if self._root.is_('a'):
-            href = self._root.attr('href')
-            return get_page(href)
+            url = self._root.attr('href')
+            if not re.search(r'https?://', url):
+                url = urlparse.urljoin(query_client.host, url)
+
+            return query_client.get_query(url)
 
 
 class Query(graphene.ObjectType):
@@ -195,13 +236,13 @@ class Query(graphene.ObjectType):
         source = args.get('source')
         header = args.get('headers')
         client_type = args.get('client')
-        headers = header and dict([map(lambda x: x.strip(), h.split(':'))
-                                   for h in header.split('|')]) or {}
+        headers = header and dict([map(lambda x: x.strip(), h.split(':')) for h in header.split('|')]) or {}
 
-        print headers
         assert url or source, 'At least you have to provide url or source of the page'
-        return get_page(url or source, headers=headers, client_type=client_type)
+        return query_client.get_query(
+            url or source, headers=headers, client_type=client_type, is_host=True)
 
 
 schema = graphene.Schema(query=Query)
 schema.register(Element)
+query_client = QueryClient()
