@@ -1,0 +1,22 @@
+{
+  page(url:"http://bj.lianjia.com/xuequfang/gonglue/" client:"requests") {
+    items: query(selector:".bd .item") {
+      title: text(selector:"a.tit")
+      url: attr(selector:"a.tit" name:"href")
+      summary: text(selector:".summary")
+      date: text(selector:"span.time")
+      thumb_url: attr(selector:"img" name:"src")
+      image_url: attr(selector:"img" name:"data-original")
+      tags: query(selector:".topic span") {
+        name: text
+      }
+    }
+    pages: query(selector:".bd .item a.tit") {
+    	title:text
+      url:attr(name:"href")
+      detail:visit {
+        content: content(selector:".article div.content")
+      }
+    }
+  }
+}
