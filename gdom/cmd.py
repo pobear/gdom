@@ -72,7 +72,7 @@ def main():
         import webbrowser
         webbrowser.open('http://localhost:5000/')
 
-        app.run()
+        app.run(host='0.0.0.0', port=8801)
     else:
         query = args.query.read()
         page = args.page
