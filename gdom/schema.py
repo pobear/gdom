@@ -1,17 +1,9 @@
 import urlparse
+import re
+
 import graphene
 from pyquery import PyQuery as pq
-import re
 import requests
-from requests.packages import chardet
-
-GDOM_HEADERS = {
-    'Referer': 'http://www.baidu.com',
-    'Upgrade-Insecure-Requests': '1',
-    'Accept-Language': 'zh-CN,zh;q=0.8,en;q=0.6,ja;q=0.4',
-    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit/537.36 (KHTML, like Gecko)'
-                  ' Chrome/52.0.2716.0 Safari/537.36'
-}
 
 
 class QueryClient(object):
