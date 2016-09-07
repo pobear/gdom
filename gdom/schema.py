@@ -202,13 +202,20 @@ class Element(Node):
     """
 
     visit = graphene.Field(Document,
-                           description='Visit will visit the href of the link and return the corresponding document')
+                           description='Visit will visit the href of the link and return the corresponding document',
+                           selector=graphene.String(), name=graphene.String())
 
     def resolve_visit(self, args, info):
-        # If is a link we follow through href attr
-        # return the resulting Document
-        if self._root.is_('a'):
-            url = self._root.attr('href')
+        node = self._query_selector(args).eq(0)
+        name = args.get('name')
+        if name:
+            url = node.attr(name)
+        elif node.is_('a'):
+            url = node.attr('href')
+        else:
+            url = None
+
+        if url:
             if not re.search(r'https?://', url):
                 url = urlparse.urljoin(query_client.host, url)
 
