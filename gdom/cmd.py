@@ -77,7 +77,7 @@ def main():
         app.run()
     elif args.deploy:
         app = get_test_app()
-        app.run(host='0.0.0.0', port=8801)
+        app.run(host='0.0.0.0', port=8008)
     else:
         query = args.query.read()
         page = args.page
