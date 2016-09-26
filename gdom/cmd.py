@@ -60,7 +60,7 @@ def main():
     group.add_argument('--test', action='store_true', default=False,
                        help='This will start a test server with a UI for querying')
     group.add_argument('--deploy', action='store_true', default=False,
-                       help='This will start online server with a UI for querying')
+                       help='This will start online server')
 
     parser.add_argument('page', metavar='PAGE', nargs='?', const=1, type=str, help='The pages to parse')
 
