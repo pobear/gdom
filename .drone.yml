@@ -1,0 +1,11 @@
+build:
+  image: python:2.7
+  commands:
+    - pip install -r requirements.txt
+
+publish:
+  docker:
+    username: jzb
+    password: Jzb_devdocker19
+    email: pobear@github.com
+    repo: api-dev.jzb.com:5000/gdom
