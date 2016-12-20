@@ -6,7 +6,5 @@ pipeline:
 
   publish:
     image: plugins/docker
-    username: jzb
-    password: Jzb_devdocker19
     email: pobear@github.com
     repo: api-dev.jzb.com:5000/gdom:latest
