@@ -6,5 +6,5 @@ pipeline:
 
   publish:
     image: plugins/docker
-    email: pobear@github.com
+    email: pobear@jzb.com
     repo: api-dev.jzb.com:5000/gdom:latest
