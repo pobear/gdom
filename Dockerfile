@@ -1,7 +1,7 @@
 FROM python:2.7
 ENV PYTHONUNBUFFERED 1
 
-COPY . /app
+COPY . /application
 RUN pip install -r /requirements.txt
 
-WORKDIR /app
+WORKDIR /application
